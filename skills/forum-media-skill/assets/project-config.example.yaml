@@ -1,0 +1,18 @@
+# forum-media-skill project configuration (example)
+# Copy to a real project file and adjust before a run. Keep it flat.
+
+TARGET_URL: "https://forum.example.org/viewforum.php?f=2"
+PROJECT_NAME: "my_forum_archive"
+SCOPE: "forum"
+ALLOWED_DOMAINS:
+  - "forum.example.org"
+MAX_PAGES: 100
+MAX_DEPTH: 4
+RESPECT_ROBOTS_TXT: true
+REQUEST_DELAY_SECONDS: 2
+USER_CONFIRMED_FULL_RUN: false
+
+# Advisory: the deterministic core orchestrates the run. When a specialized
+# forum extractor is installed (forumscraper / forum-dl), the pipeline plans a
+# side-by-side comparison against Scrapy controls on a small sample first.
+EXTRACTOR: "scrapy-adapter"

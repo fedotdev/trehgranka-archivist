@@ -1,0 +1,8 @@
+{
+  "name": "forum-media-skill",
+  "version": "1.0.0",
+  "description": "Public web forum archivist (phpBB/vBulletin/XenForo/Discourse): topics, posts, quotes, reactions, attachments with deterministic crawl orchestration, mandatory Wayback recovery queue and per-entity coverage. Part of trehgranka-archivist.",
+  "author": {
+    "name": "trehgranka-archivist"
+  }
+}

@@ -1,0 +1,5 @@
+{"url": "https://community.example.org/", "kind": "page", "depth": 0, "status": 200, "content_type": "text/html; charset=utf-8"}
+{"url": "https://community.example.org/topic/42/", "kind": "page", "depth": 1, "status": 200, "content_type": "text/html; charset=utf-8"}
+{"url": "https://community.example.org/files/attachment.pdf", "kind": "document", "depth": 2, "status": 200, "content_type": "application/pdf", "media_role": "attachment", "data": "255044462d312e34"}
+{"url": "https://community.example.org/files/photo.jpg", "kind": "media", "depth": 2, "status": 200, "content_type": "image/jpeg", "media_role": "original", "data": "ffd8ffe0"}
+{"url": "https://community.example.org/files/broken.jpg", "kind": "media", "depth": 2, "status": 410, "content_type": "image/jpeg", "media_role": "original"}

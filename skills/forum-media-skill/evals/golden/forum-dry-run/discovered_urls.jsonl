@@ -1,0 +1,7 @@
+{"url": "https://community.example.org/", "kind": "page", "depth": 0, "status": 200, "content_type": "text/html; charset=utf-8"}
+{"url": "https://community.example.org/viewforum.php?f=2", "kind": "forum", "depth": 1, "status": 200, "content_type": "text/html; charset=utf-8"}
+{"url": "https://community.example.org/viewtopic.php?t=42", "kind": "topic", "depth": 2, "status": 200, "content_type": "text/html; charset=utf-8"}
+{"url": "https://community.example.org/viewtopic.php?t=42&page=2", "kind": "post", "depth": 3, "status": 200, "content_type": "text/html; charset=utf-8"}
+{"url": "https://community.example.org/post/9876", "kind": "post", "depth": 3, "status": 200, "content_type": "text/html; charset=utf-8"}
+{"url": "https://community.example.org/download/file.php?id=501", "kind": "document", "depth": 3, "status": 200, "content_type": "application/pdf", "media_role": "attachment"}
+{"url": "https://community.example.org/files/logo.png", "kind": "media", "depth": 2, "status": 200, "content_type": "image/png", "media_role": "navigation_asset"}

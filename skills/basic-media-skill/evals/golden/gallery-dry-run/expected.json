@@ -1,0 +1,23 @@
+{
+  "stage": "test_report",
+  "dry_run": true,
+  "confirmed": false,
+  "run_full_flag": false,
+  "gate": "stop",
+  "gate_reason": "USER_CONFIRMED_FULL_RUN must be true AND --run-full must be passed",
+  "decision": "needs changes",
+  "urls_discovered": 7,
+  "pages": 2,
+  "media_discovered": 5,
+  "media_valid": 4,
+  "media_invalid": 1,
+  "recovery_queue_size": 1,
+  "coverage": "0.57",
+  "output": {
+    "dir": "<TEMP_WORKSPACE>",
+    "state": "<TEMP_WORKSPACE>\\data\\archive.sqlite",
+    "raw_html": "<TEMP_WORKSPACE>\\data\\raw\\html",
+    "media_dir": "<TEMP_WORKSPACE>\\data\\media\\images",
+    "manifest": "<TEMP_WORKSPACE>\\data\\manifest.jsonl"
+  }
+}

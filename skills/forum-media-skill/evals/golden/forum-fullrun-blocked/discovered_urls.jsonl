@@ -1,0 +1,4 @@
+{"url": "https://community.example.org/", "kind": "page", "depth": 0, "status": 200, "content_type": "text/html; charset=utf-8"}
+{"url": "https://community.example.org/viewforum.php?f=2", "kind": "forum", "depth": 1, "status": 200, "content_type": "text/html; charset=utf-8"}
+{"url": "https://community.example.org/viewtopic.php?t=42", "kind": "topic", "depth": 2, "status": 200, "content_type": "text/html; charset=utf-8"}
+{"url": "https://community.example.org/viewtopic.php?t=42&page=2", "kind": "post", "depth": 3, "status": 200, "content_type": "text/html; charset=utf-8"}

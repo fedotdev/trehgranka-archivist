@@ -1,0 +1,30 @@
+# basic-media-skill — extraction rules example
+# Decide how each URL class is extracted. Extend for the site being archived.
+
+extraction:
+  generic_html_page:
+    fields: [title, breadcrumbs, section, album, canonical_url, dates, authors]
+    js_dependent: false
+  album_page:
+    fields: [title, album, media_cards, original_links, previews, captions, pagination]
+    js_dependent: false
+  photo_page:
+    fields: [title, caption, original_src, preview_src, exif_url]
+    js_dependent: false
+  direct_image:
+    fields: [url, content_type, size, dimensions]
+    js_dependent: false
+
+media_roles:
+  - original
+  - candidate_original
+  - thumbnail
+  - navigation_asset
+  - document_scan
+  - unknown
+
+rules:
+  - "Do not replace raw post/source HTML with Markdown or text — store all forms separately."
+  - "Different resolutions of the same image are variants/derivatives, never exact duplicates."
+  - "Deduplicate exactly by SHA-256; probable visual duplicates via pHash/dHash keep all URL sources and are never auto-deleted."
+  - "Never declare candidate_original a verified original without objective signs (wrapper link, resolution, size, DOM role, HTTP response, template rule)."

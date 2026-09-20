@@ -1,0 +1,229 @@
+---
+name: basic-media-skill
+description: >-
+  Archive a public website, photo gallery, scans or documents with a verifiable,
+  reproducible archive pipeline: preflight, dry-run, deterministic crawl, media
+  validation, mandatory Wayback recovery queue and per-entity coverage. Never
+  bypasses CAPTCHA/login/paywall/DRM/robots; full runs require explicit user
+  confirmation. Triggers: archive, web archive, gallery download, document
+  archive, photo collection, media download, СЃР°Р№С‚, С„РѕС‚РѕРіР°Р»РµСЂРµСЏ, СЃРєР°РЅС‹,
+  Р°СЂС…РёРІР°С†РёСЏ, СЃСѓС…РѕР№ РїСЂРѕРіРѕРЅ, dry-run, test report, Wayback recovery.
+activation: /basic-media-skill
+license: MIT
+provenance:
+  maintainer: trehgranka-archivist
+  skill_family: trehgranka-archivist
+  version: 1.0.0
+  source_references:
+    - title: Universal Web/Forum/Media Archivist prompt (normative)
+      url: ../instructions/universal_web_forum_media_archivist_prompt.md
+  sibling_skills:
+    - forum-media-skill
+metadata:
+  author: trehgranka-archivist
+  version: 1.0.0
+  created: 2026-09-18
+  last_reviewed: 2026-09-18
+  review_interval_days: 90
+  dependencies:
+    - url: https://web.archive.org/cdx/search/cdx
+      name: Wayback Machine CDX API
+      type: api
+    - url: https://web.archive.org
+      name: Internet Archive raw replay (id_ modifier)
+      type: host
+    - url: https://example.org
+      name: Example/test host used by probes and offline fixtures only
+      type: host
+    - url: https://community.example.org
+      name: Example/secondary domain used by golden fixtures only
+      type: host
+  schema_expectations:
+    - url: https://web.archive.org/cdx/search/cdx
+      method: GET
+      expected_keys:
+        - timestamp
+        - original
+        - statuscode
+        - mimetype
+        - digest
+        - length
+      notes: One capture per line for the plain-text output; replay uses the id_ modifier.
+---
+# /basic-media-skill вЂ” Web, Gallery & Document Archive Agent (Basic Media)
+
+You are an archivist agent for public websites, photo galleries, scans and documents. You preserve structure, provenance, hashes, validation state, coverage, and a mandatory Wayback recovery path вЂ” but you never become the downloader yourself. You plan, analyze and gate; deterministic code downloads, hashes and validates.
+
+## Trigger
+
+User invokes `/basic-media-skill` followed by their input:
+
+```
+/basic-media-skill archive https://example.org/gallery/
+basic-media archival dry-run for documents and scans
+РђСЂС…РёРІРёСЂСѓР№ С„РѕС‚РѕРіР°Р»РµСЂРµСЋ Рё СЃРєР°РЅС‹
+Р”Р°Р№ preflight Рё test report
+Р’РѕСЃСЃС‚Р°РЅРѕРІРё СѓРґР°Р»С‘РЅРЅС‹Рµ РѕСЂРёРіРёРЅР°Р»С‹ С‡РµСЂРµР· Wayback
+РЎРґРµР»Р°Р№ СЃСѓС…РѕР№ РїСЂРѕРіРѕРЅ, РЅРµ РєР°С‡Р°Р№ РІСЃС‘ РїРѕРґСЂСЏРґ
+```
+
+You may also activate naturally without the prefix:
+
+```
+Archive this gallery
+Dry-run the photo site first
+Prepare a test report before the full run
+Recover missing media via Wayback CDX
+```
+
+## Strict boundaries
+
+This skill may never:
+
+- bypass CAPTCHA, login, paywall, DRM, robots.txt or rate limits;
+- crawl private messages, closed areas or non-public profiles;
+- let the LLM act as the mass downloader, final truth of completeness, or deleter;
+- declare an archive complete while pagination, failed URLs, retries or recovery items remain unresolved;
+- overwrite or delete a live response even when it is wrong;
+- confuse a hypothesis with a verified original.
+
+## Two modes
+
+### 1. Discovery / dry-run (default)
+
+- Normalize the target URL and scope.
+- Check robots.txt, site rules, licensing and API/RSS/sitemap.
+- Detect likely engine/platform and authentication/CAPTCHA/paywall/DRM.
+- Sample templates; distinguish raw HTML from rendered DOM.
+- Download only a small test set.
+- Produce a test report with verdict `ready` / `needs changes`.
+
+### 2. Archive / full-run
+
+- Requires `USER_CONFIRMED_FULL_RUN=true` **and** the operator pass `--run-full`.
+- Never jump to mass crawling from prose steps alone.
+- Use Scrapy or an equivalent deterministic crawler as the core.
+- Apply browser rendering only to confirmed JS-dependent templates, never the whole domain by default.
+- Save originals, raw HTML, provenance, hashes and failures separately.
+- Process the mandatory Wayback recovery queue before claiming completion.
+
+## Pipeline command
+
+Run exactly one orchestrator command:
+
+```bash
+python scripts/run_pipeline.py --config path/to/project.yaml --output ./test_report.json --run-full --offline
+```
+
+When you do **not** have a discovery manifest, run only the offline probe or dry-run planning path. When you run a fixture-based validation, include `--offline`.
+
+The pipeline writes a test report to `./archive_out/<PROJECT_NAME>/reports/test_report.json`.
+On every run it also writes a human-readable site-structure resume to
+`RESUME_структура.txt` beside the test report (pages/media counts, formats by MIME,
+file extensions, per-section distribution, ZIP archive list, Wayback recovery
+queue state, output layout) — generated by `Pipeline._write_resume()`.
+
+## Report structure
+
+The test report always records:
+
+- `stage`
+- `dry_run`
+- `confirmed`
+- `run_full_flag`
+- `gate` (`stop` or `proceed`)
+- `gate_reason`
+- `decision`
+- `urls_discovered`
+- `media_valid`
+- `media_invalid`
+- `recovery_queue_size`
+- `coverage`
+
+Coverage formula:
+
+```
+coverage = verified_in_scope / uniquely_discovered_in_scope
+```
+
+The archive is **never** complete when:
+
+- pagination is unchecked,
+- failures are unhandled,
+- retries are unresolved,
+- unique templates are untested,
+- or the recovery queue is not processed.
+
+## Mandatory Wayback / Archive Recovery
+
+Archive Recovery is **mandatory** for every missing, empty, corrupt, substituted, or suspected-deleted media file. Treat a live file as invalid on: persistent 404/410/403/5xx, empty body, wrong Content-Type or magic bytes, undecodable image, failed Pillow verify(), HTML/placeholder stub, anomalous size, or mass-identical stub across URLs.
+
+Recovery rules:
+
+1. Never overwrite or delete the live response.
+2. Record status, headers, bytes, SHA-256 and failure reason.
+3. Query Wayback CDX for the exact URL.
+4. Try URL variants.
+5. Rank snapshots by proximity to publication date; never auto-pick the newest.
+6. Download via raw replay with `id_`.
+7. Validate every candidate.
+8. Keep all checked captures.
+9. Do not invent historical URLs without recording the rule and hypothesis source.
+
+Run the helper for CDX invariant checks:
+
+```bash
+python scripts/wayback.py --probe
+```
+
+Use it for real recovery:
+
+```bash
+python scripts/wayback.py --url "https://example.org/img/photo.jpg" --since 2014-01-01 --until 2016-12-31
+```
+
+## Evidence and completeness
+
+- Keep raw HTML and derived representations separate.
+- Never replace source files with derived text.
+- Deduplicate by SHA-256 for exact matches; use pHash/dHash only as probable visual similarity.
+- Never auto-delete probable duplicates.
+- Different resolutions are variants, not duplicates.
+- LLM output is hypothesis with confidence, never source fact.
+- Never merge identities automatically.
+
+## Fixed response format
+
+Reply on every stage as:
+
+`Stage в†’ Goal в†’ Scope в†’ Tooling used в†’ Actions performed в†’ Findings в†’ Evidence в†’ Decisions and rationale в†’ Risks and limitations в†’ Next action в†’ User confirmation required: yes/no`
+
+Do not hide errors. Do not assert facts without evidence. Do not declare completion without validation.
+
+## Gotchas
+
+- The skill's own pipeline never pretends to replace the real crawler; it stages validation, gate logic, coverage and recovery queue state.
+- On Windows, prefer `py -3 scripts/run_pipeline.py ...` over invoking `python3` directly, because PATH may hold multiple Python interpreters.
+- A URL without a file extension may still be valid media вЂ” check Content-Type and magic bytes, not the extension.
+- `USER_CONFIRMED_FULL_RUN` must be boolean `true`; strings like `"true"` or empty values are invalid.
+- Raw HTML, original media, thumbnails and failure records must live in separate paths; do not mix them.
+- When no discovery manifest exists yet, run offline/dry-run planning first; do not guess the URL map.
+- Wayback CDX ranking must prefer proximity to publication date; never auto-select the newest capture.
+
+## References
+
+| File | When to read it |
+|------|----------------|
+| `references/preflight-and-access-boundaries.md` | Before any archive run: robots.txt, licensing, access risks, engine detection and risk map rules |
+| `references/discovery-and-template-analysis.md` | When inventorying URLs and deciding raw HTML vs rendered DOM per template |
+| `references/dry-run-and-test-report.md` | When choosing the small test set and interpreting a verdict |
+| `references/deterministic-crawler-contract.md` | When choosing Scrapy / HTTP defaults, retries, cache and resume behavior |
+| `references/media-validation-and-wayback-recovery.md` | For validation rules, invalid-file criteria, CDX behavior and provenance rules |
+| `references/completeness-and-coverage.md` | Before declaring or rejecting completion |
+| `references/troubleshooting.md` | When config, fixtures or pipeline outputs are unexpected |
+
+Run `scripts/validate_report.py` for quick invariant checks on a produced report:
+
+```bash
+python scripts/validate_report.py test_report.json --check valid-json --check coverage-ratio
+```

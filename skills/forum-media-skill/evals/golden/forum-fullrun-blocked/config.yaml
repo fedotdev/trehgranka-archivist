@@ -1,0 +1,17 @@
+TARGET_URL: "https://community.example.org/"
+PROJECT_NAME: "forum_media_eval_blocked"
+SCOPE: "forum"
+ALLOWED_DOMAINS:
+  - "community.example.org"
+MAX_PAGES: 30
+MAX_DEPTH: 3
+RESPECT_ROBOTS_TXT: true
+REQUEST_DELAY_SECONDS: 2
+USER_CONFIRMED_FULL_RUN: true
+EXTRACTOR: "forum-dl"
+
+# Forum crawling profile:
+# - EXTRACTOR is advisory: full runs orchestrate a deterministic core, not the
+#   extractor itself.
+# - Topic pagination is checked in discovery; multi-page topics are expansion
+#   candidates, not auto-followed in dry-run.

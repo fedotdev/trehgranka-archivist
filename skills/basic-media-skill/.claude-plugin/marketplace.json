@@ -1,0 +1,14 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "trehgranka-archivist",
+  "owner": {
+    "name": "trehgranka-archivist"
+  },
+  "plugins": [
+    {
+      "name": "basic-media-skill",
+      "source": "./",
+      "description": "Web, gallery and document archivist: deterministic crawl orchestration, mandatory Wayback recovery queue and verifiable coverage."
+    }
+  ]
+}

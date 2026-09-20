@@ -1,0 +1,10 @@
+TARGET_URL: "https://example.org/gallery/"
+PROJECT_NAME: "basic_media_eval_gallery"
+SCOPE: "gallery"
+ALLOWED_DOMAINS:
+  - "example.org"
+MAX_PAGES: 20
+MAX_DEPTH: 3
+RESPECT_ROBOTS_TXT: true
+REQUEST_DELAY_SECONDS: 2
+USER_CONFIRMED_FULL_RUN: false

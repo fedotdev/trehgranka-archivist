@@ -1,0 +1,27 @@
+# basic-media-skill — selectors example template
+# One block per template_type. The LLM fills these during template analysis;
+# they never run as code. Save as selectors.yaml in the archive config/.
+
+template_types:
+  gallery_index:
+    title: "h1.title"
+    album_links: "a[href*='/album/']"
+    pagination: "ul.pagination a[href]"
+  album_page:
+    title: "h1.album-title"
+    media_cards: "div.media-item"
+    original_link: "a.original"
+    preview_src: "img.preview"
+    captions: "figcaption"
+    next: "a.next-page"
+  photo_page:
+    title: "h1.photo-title"
+    original_src: "img#full-image"
+    caption: "p.caption"
+  document_page:
+    links: "a[href$='.pdf'], a[href$='.djvu']"
+
+rules:
+  - note: "Never treat a thumbnail as an original: check resolution, size and DOM role before marking candidate_original."
+  - note: "Check srcset / data-src / data-original for lazy-loading images."
+  - note: "A URL without a file extension is still media if Content-Type and magic bytes say so."

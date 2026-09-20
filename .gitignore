@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Local / OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor
+.idea/
+.vscode/
+*.swp
+
+# Runtime state: never commit archives, raw downloads, probe/recovery
+# outputs, generated reports, credentials or keys. The run workspace
+# stays out of this repository (e.g. a sibling <run-workspace>/ dir).
+runs/
+*.sqlite
+*.db
+
+# Secrets
+.env
+*.key
+*.pem
+credentials*

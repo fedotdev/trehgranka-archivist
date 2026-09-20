@@ -1,0 +1,7 @@
+{"url": "https://example.org/gallery/", "kind": "page", "depth": 0, "status": 200, "content_type": "text/html; charset=utf-8", "template_type": "gallery_index"}
+{"url": "https://example.org/gallery/album-1/", "kind": "page", "depth": 1, "status": 200, "content_type": "text/html; charset=utf-8", "template_type": "album_page"}
+{"url": "https://example.org/gallery/album-1/photo-1.jpg", "kind": "media", "depth": 2, "status": 200, "content_type": "image/jpeg", "media_role": "original", "body": "6254734c-7e90-4a1e-9d9b-13c0e7f1a1b2"}
+{"url": "https://example.org/gallery/album-1/photo-1-thumb.jpg", "kind": "media", "depth": 2, "status": 200, "content_type": "image/jpeg", "media_role": "thumbnail", "body": "52f9dc8c-6f51-4e9d-8f8e-b4479c38513c"}
+{"url": "https://example.org/gallery/album-1/photo-2.jpg", "kind": "media", "depth": 2, "status": 404, "content_type": "image/jpeg", "media_role": "original", "body": ""}
+{"url": "https://example.org/gallery/album-1/photo-2-thumb.jpg", "kind": "media", "depth": 2, "status": 200, "content_type": "image/jpeg", "media_role": "thumbnail", "body": "ef6b4f5d-55a3-4f0a-9c40-2db4c8a0d114"}
+{"url": "https://example.org/gallery/manual.pdf", "kind": "document", "depth": 1, "status": 200, "content_type": "application/pdf", "media_role": "document_scan", "body": "PDF-document-body"}

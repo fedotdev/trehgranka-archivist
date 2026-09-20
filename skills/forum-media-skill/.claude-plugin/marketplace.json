@@ -1,0 +1,14 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "trehgranka-archivist",
+  "owner": {
+    "name": "trehgranka-archivist"
+  },
+  "plugins": [
+    {
+      "name": "forum-media-skill",
+      "source": "./",
+      "description": "Public web forum archivist (phpBB/vBulletin/XenForo/Discourse): topics, posts, quotes, reactions, attachments with deterministic crawl orchestration, mandatory Wayback recovery queue and per-entity coverage."
+    }
+  ]
+}

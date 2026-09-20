@@ -1,0 +1,24 @@
+# basic-media-skill — exclusion rules example
+# Defaults exclude account/session surfaces. Extend per site.
+
+exclude_url_patterns:
+  - "*/login/*"
+  - "*/register/*"
+  - "*/messenger/*"
+  - "*/profile/*"
+  - "*/notifications/*"
+  - "*/settings/*"
+  - "mailto:"
+  - "javascript:"
+
+exclude_reasons:
+  - "requires_login"
+  - "private"
+  - "robots_blocked"
+  - "out_of_scope"
+  - "unsupported"
+
+policy:
+  - "Do not bypass CAPTCHA, login, paywall, DRM, robots.txt or rate limits — even for archiving."
+  - "Do not crawl private messages, closed topics/profiles or personal data not visible to a normal public visitor."
+  - "On HTTP 429/503: lower concurrency, increase backoff, or stop and record state. Do not continue aggressively."

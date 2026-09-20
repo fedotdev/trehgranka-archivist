@@ -1,0 +1,8 @@
+{
+  "name": "basic-media-skill",
+  "version": "1.0.0",
+  "description": "Web, gallery and document archivist: deterministic crawl orchestration, mandatory Wayback recovery queue and verifiable coverage. Part of trehgranka-archivist.",
+  "author": {
+    "name": "trehgranka-archivist"
+  }
+}
