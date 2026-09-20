@@ -164,26 +164,6 @@ def _parse_cdx_text(raw: str) -> tuple[list[dict], str | None]:
     return rows, resume_key
 
 
-def load_captures(cdx_url: str, timeout: int = 60, max_bytes: int = 20 * 2 ** 20) -> list[dict]:
-    """Query the Wayback CDX API (text format) and return capture rows.
-
-    Handles the JSON response too, should an endpoint reply with output=json."""
-    policy = RequestPolicy(user_agent=CDX_UA, timeout_seconds=float(timeout),
-                           max_response_bytes=max_bytes, retry_count=2, delay_seconds=0.5)
-    result = fetch(cdx_url, policy=policy)
-    if result.get("error") or result.get("status") != 200:
-        return []
-    body = result.get("body") or b""
-    if body.lstrip().startswith(b"["):  # JSON output
-        try:
-            data = json.loads(body.decode("utf-8", errors="replace"))
-            return [dict(zip(row[1:] and data[0], row)) if data else {} for row in data[1:]] if data else []
-        except (json.JSONDecodeError, IndexError):
-            return []
-    rows, _ = _parse_cdx_text(body.decode("utf-8", errors="replace"))
-    return rows
-
-
 def query_all_captures(variant: str, since: str | None, until: str | None,
                        capture_limit: int = 500, timeout: int = 60) -> tuple[list[dict], list[str]]:
     """CDX query with pagination: follow resumeKey until exhausted or MAX_CDX_PAGES."""
@@ -262,21 +242,19 @@ def replay_url(capture: dict, original: str) -> str:
 # outcome classification
 # --------------------------------------------------------------------------
 
-def classify_outcome(body: bytes, captured_sha: str = None,
-                     live_sha: str | None = None) -> tuple[str, list[str]]:
+def classify_outcome(body: bytes) -> tuple[str, list[str]]:
     """Classify a recovered replay: never *assume* original.
 
-    verified_original — bytes match the exact failed live file (sha-identical)
-        OR a large, non-stub media body validated structurally.
+    verified_original — a large, non-stub media body validated structurally.
     thumbnail_only   — small body consistent with a thumbnail/preview.
     placeholder      — matching a known stub/marker body.
-    ambiguous        — valid media but no objective evidence of originality.
     """
     notes: list[str] = []
-    if live_sha and captured_sha and captured_sha == live_sha:
-        return "verified_original", ["byte-identical to live origin"]
     if not body or is_stub(body):
         return "placeholder", ["stub/placeholder signature"]
+    # ponytail: "verified" = structurally valid and not small. A live-size
+    # comparison (height/width/bytes vs the failed live response) would be
+    # stronger; upgrade when the pipeline passes live dimensions here.
     if len(body) < THUMBNAIL_MAX_BYTES:
         return "thumbnail_only", [f"only {len(body)} bytes"]
     return "verified_original", ["structurally valid, non-stub media body"]
@@ -339,7 +317,7 @@ def recover_one(url: str, *, since: str | None = None, until: str | None = None,
         if not vr["ok"]:
             errors.append(f"replay {cap.get('timestamp')}: invalid bytes ({'; '.join(vr['reasons'])})")
             continue
-        outcome, notes = classify_outcome(body, vr.get("sha256"), None)
+        outcome, notes = classify_outcome(body)
         capture = {
             "capture_timestamp": cap.get("timestamp"),
             "replay_url": replay,

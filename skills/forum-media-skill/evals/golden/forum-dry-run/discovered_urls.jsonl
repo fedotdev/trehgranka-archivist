@@ -4,4 +4,4 @@
 {"url": "https://community.example.org/viewtopic.php?t=42&page=2", "kind": "post", "depth": 3, "status": 200, "content_type": "text/html; charset=utf-8"}
 {"url": "https://community.example.org/post/9876", "kind": "post", "depth": 3, "status": 200, "content_type": "text/html; charset=utf-8"}
 {"url": "https://community.example.org/download/file.php?id=501", "kind": "document", "depth": 3, "status": 200, "content_type": "application/pdf", "media_role": "attachment", "data": "255044462d312e340a312030206f626a0a3c3c202f54797065202f436174616c6f67203e3e0a656e646f626a0a747261696c65720a3c3c202f53697a652031203e3e0a2525454f460a"}
-{"url": "https://community.example.org/files/logo.png", "kind": "media", "depth": 2, "status": 200, "content_type": "image/png", "media_role": "navigation_asset", "data": "89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000049454e44ae426082"}
+{"url": "https://community.example.org/files/logo.png", "kind": "media", "depth": 2, "status": 200, "content_type": "image/png", "media_role": "navigation_asset", "data": "89504e470d0a1a0a0000000d494844520000000200000002080600000072b60d240000000049454e44ae426082"}

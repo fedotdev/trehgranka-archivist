@@ -20,8 +20,8 @@ the media references leaked outside scope. Exit 0 only then.
 from __future__ import annotations
 
 import argparse
-import json
 import sys
+import tempfile
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -103,7 +103,7 @@ def main() -> int:
         if args.output:
             out = args.output.resolve()
         else:
-            out = Path(sys.argv[0]).resolve().parent / ".tmp-live-test-report.json"
+            out = Path(tempfile.gettempdir()) / f"live-discovery-test-{port}.json"
         pipe = Pipeline(cfg, out, run_full=False, offline=False)
         # loopback is an explicit test-only override (never production allowed)
         pipe._create_layout()

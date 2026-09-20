@@ -74,10 +74,6 @@ PLACEHOLDER_PREFIXES: tuple[bytes, ...] = (
     b"\x47\x49\x46\x38\x39\x61\x01\x00\x01\x00",  # GIF89a 1x1 (transparent pixel)
     b"\x47\x49\x46\x38\x37\x61\x01\x00\x01\x00",  # GIF87a 1x1
 )
-PLACEHOLDER_SHA256: dict[str, str] = {
-    # 1x1 transparent PNG (the ubiquitous "spacer" used by IPS and others)
-    "1x1_png_spacer": "c7e4f1b3a48107d00239d04171ba70ac2f6fe18e3d71e5d1c1e7d3a75a1f6b2e",
-}
 
 
 class ConfigError(ValueError):
@@ -538,13 +534,24 @@ def _validate_zip(body: bytes, reasons: list[str]) -> bool:
     return True
 
 
-def is_placeholder_body(body: bytes, declared: str = "") -> bool:
-    """Known stub / spacer signatures (hard SHA values are config, see registry)."""
+# format -> structural validator (stdlib-only, no third-party decode)
+MEDIA_VALIDATORS: dict[str, callable] = {
+    "image/jpeg": _validate_jpeg,
+    "image/png": _validate_png,
+    "image/gif": _validate_gif,
+    "image/webp": _validate_webp,
+}
+
+
+def is_placeholder_body(body: bytes) -> bool:
+    """Known stub / spacer signatures: 1x1 GIF/PNG and all-zeros micro blobs."""
     if body.startswith(PLACEHOLDER_PREFIXES):
         return True
-    if len(body) < 80 and not body.strip(b"\x00"):
-        return True  # all-zeros micro blob
-    return False
+    if body.startswith(b"\x89PNG\r\n\x1a\n") and len(body) >= 33:
+        # IHDR width/height both 1 -> the ubiquitous 1x1 spacer PNG
+        if body[16:20] == b"\x00\x00\x00\x01" and body[20:24] == b"\x00\x00\x00\x01":
+            return True
+    return len(body) < 80 and not body.strip(b"\x00")
 
 
 def validate_media(*, status, content_type, body, role: str = "unknown") -> dict:
@@ -555,6 +562,7 @@ def validate_media(*, status, content_type, body, role: str = "unknown") -> dict
     """
     reasons: list[str] = []
     sha = sha256_bytes(body)
+    detected = ""
     if isinstance(status, str):
         if status != "200":
             reasons.append(f"http {status}")
@@ -565,7 +573,7 @@ def validate_media(*, status, content_type, body, role: str = "unknown") -> dict
     elif not body:
         reasons.append("empty body")
         state = "invalid"
-    elif is_placeholder_body(body, content_type):
+    elif is_placeholder_body(body):
         reasons.append("placeholder stub body")
         state = "invalid"
     else:
@@ -574,30 +582,16 @@ def validate_media(*, status, content_type, body, role: str = "unknown") -> dict
             reasons.append("html placeholder instead of media")
             state = "invalid"
         elif kind == "media":
-            decl_ok = _mime_matches(content_type, detected)
-            if detected == "image/jpeg":
-                ok = _validate_jpeg(body, reasons)
-                extra = [] if decl_ok else ["content-type mismatch with magic"]
-                reasons = extra + reasons
-            elif detected == "image/png":
-                ok = _validate_png(body, reasons)
-                extra = [] if decl_ok else ["content-type mismatch with magic"]
-                reasons = extra + reasons
-            elif detected == "image/gif":
-                ok = _validate_gif(body, reasons)
-                extra = [] if decl_ok else ["content-type mismatch with magic"]
-                reasons = extra + reasons
-            elif detected == "image/webp":
-                ok = _validate_webp(body, reasons)
-                extra = [] if decl_ok else ["content-type mismatch with magic"]
-                reasons = extra + reasons
-            elif detected == "image/x-icon":
+            validator = MEDIA_VALIDATORS.get(detected)
+            if detected == "image/x-icon":
                 ok = len(body) >= 6
-                reasons = ([] if decl_ok else ["content-type mismatch with magic"]) + \
-                          ([] if ok else ["ico frame too short"])
-            else:
+            elif validator is None:
                 reasons.append(f"unhandled image type {detected}")
                 ok = False
+            else:
+                ok = validator(body, reasons)
+            if ok and not _mime_matches(content_type, detected):
+                reasons.append("content-type mismatch with magic")
             state = "verified" if ok else "invalid"
         elif kind == "document":
             if detected == "application/pdf":
@@ -617,20 +611,15 @@ def validate_media(*, status, content_type, body, role: str = "unknown") -> dict
         "state": state,
         "reasons": reasons,
         "sha256": sha,
-        "mime": detected if "detected" in locals() and detected else _declared_mime(content_type),
-        "detected": detected if "detected" in locals() else "",
-        "placeholder": is_placeholder_body(body, content_type),
+        "mime": detected if detected else _declared_mime(content_type),
+        "detected": detected,
+        "placeholder": is_placeholder_body(body),
         "size": len(body),
     }
 
 
 def _declared_mime(content_type: str) -> str:
     return (content_type or "").split(";")[0].strip().lower() or "application/octet-stream"
-
-
-def decoded_str(state: str) -> str:
-    """Deprecated alias — validation now reports explicit verification stages."""
-    return state
 
 
 # --------------------------------------------------------------------------
@@ -669,6 +658,30 @@ def atomic_store(target: Path, data: bytes) -> Path:
 # fetch (with retry, redirect chain, budgets)
 # --------------------------------------------------------------------------
 
+class _GuardedRedirectHandler(urllib.request.HTTPRedirectHandler):
+    """Record every redirect hop and re-validate the new host on each.
+
+    urllib's built-in handler follows redirects invisibly; this one surfaces
+    the full chain to the pipieline and makes any hop to a non-public host
+    fail the whole fetch (SSRF re-check after *every* redirect)."""
+
+    def __init__(self, chain: list[dict], max_redirects: int) -> None:
+        super().__init__()
+        self._chain = chain
+        self._max = max_redirects
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):  # noqa: ANN001
+        target = urllib.parse.urljoin(req.full_url, newurl)
+        try:
+            assert_public_target(target)
+        except Exception as exc:  # noqa: BLE001
+            raise ValueError(f"redirect blocked (ssrf re-check): {exc}") from exc
+        if len(self._chain) >= self._max:
+            raise ValueError(f"redirect chain exceeds {self._max} hops")
+        self._chain.append({"from": req.full_url, "to": target, "status": code})
+        return super().redirect_request(req, fp, code, msg, headers, target)
+
+
 def fetch(url: str, *, policy: RequestPolicy | None = None,
           scheduler: HostScheduler | None = None) -> dict:
     """Fetch one URL with the full policy applied.
@@ -693,24 +706,18 @@ def fetch(url: str, *, policy: RequestPolicy | None = None,
         if attempt:
             scheduler.wait(url)  # delay before retry is fine (per-host too)
         try:
-            for hop in range(policy.max_redirects + 1):
-                scheduler.wait(current)
-                req = urllib.request.Request(current, headers={"User-Agent": policy.user_agent})
-                # minimal redirect handling (real chains recorded below)
-                resp = urllib.request.urlopen(req, timeout=policy.timeout_seconds)  # noqa: S310
-                if resp.url != current:
-                    chain.append({"from": current, "to": resp.url, "status": resp.status})
-                    assert_public_target(resp.url)  # SSRF re-check after redirect
-                    current = resp.url
-                    final_url = resp.url
-                status = resp.status
-                headers = dict(resp.headers.items())
-                chunk = resp.read(policy.max_response_bytes + 1)
-                if len(chunk) > policy.max_response_bytes:
-                    truncated = True
-                    chunk = chunk[:policy.max_response_bytes]
-                body = chunk
-                break
+            scheduler.wait(current)
+            opener = urllib.request.build_opener(_GuardedRedirectHandler(chain, policy.max_redirects))
+            req = urllib.request.Request(current, headers={"User-Agent": policy.user_agent})
+            resp = opener.open(req, timeout=policy.timeout_seconds)  # noqa: S310
+            final_url = resp.url
+            status = resp.status
+            headers = dict(resp.headers.items())
+            chunk = resp.read(policy.max_response_bytes + 1)
+            if len(chunk) > policy.max_response_bytes:
+                truncated = True
+                chunk = chunk[:policy.max_response_bytes]
+            body = chunk
             break
         except urllib.error.HTTPError as exc:
             status = exc.code
@@ -871,11 +878,13 @@ def _parse_simple_yaml(text: str) -> dict:
 def probe_self_check() -> str:
     jpeg_ok = validate_media(status=200, content_type="image/jpeg", body=_build_jpeg())
     assert jpeg_ok["ok"], f"jpeg self-check failed: {jpeg_ok['reasons']}"
-    good_png = _build_png((1, 1))
+    good_png = _build_png((2, 2))
     assert validate_media(status=200, content_type="image/png", body=good_png)["ok"]
     bad_png = good_png[:-1]  # truncate the IEND tail
     assert not validate_media(status=200, content_type="image/png", body=bad_png)["ok"], \
         "png must reject truncated/crc-bad data"
+    spacer = validate_media(status=200, content_type="image/png", body=_build_png((1, 1)))
+    assert not spacer["ok"] and spacer["placeholder"], "1x1 spacer PNG must be flagged"
     gif_ok = _validate_gif(b"GIF89a\x01\x00\x01\x00\x80\x00\x00\x3b", [])
     assert gif_ok, "valid GIF89a must pass"
     http_bad = validate_media(status=404, content_type="image/jpeg", body=b"")

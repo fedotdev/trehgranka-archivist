@@ -655,3 +655,18 @@ Appended automatically by scripts/run_evals.py (and scripts/evolve.py) when a ch
 ]
 ```
 
+## 2026-09-20T18:57:14Z — run_evals --rollout FAILED
+
+- counts: passed=15, failed=0, errors=0, regressions=1, judge_failed=0
+- failing checks (raw):
+
+```json
+[
+  {
+    "case": "gallery-fullrun-blocked",
+    "criterion": "<baseline>",
+    "status": "regression"
+  }
+]
+```
+

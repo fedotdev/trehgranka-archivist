@@ -915,3 +915,28 @@ Appended automatically by scripts/run_evals.py (and scripts/evolve.py) when a ch
 ]
 ```
 
+## 2026-09-20T18:57:56Z — run_evals --rollout FAILED
+
+- counts: passed=15, failed=3, errors=0, regressions=0, judge_failed=0
+- failing checks (raw):
+
+```json
+[
+  {
+    "case": "forum-dry-run",
+    "criterion": "forum-payload",
+    "status": "fail"
+  },
+  {
+    "case": "forum-fullrun-blocked",
+    "criterion": "forum-payload",
+    "status": "fail"
+  },
+  {
+    "case": "forum-extract-holdout",
+    "criterion": "forum-payload",
+    "status": "fail"
+  }
+]
+```
+

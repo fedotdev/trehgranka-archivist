@@ -1,4 +1,4 @@
 {"url": "https://example.org/gallery/", "kind": "page", "depth": 0, "status": 200, "content_type": "text/html; charset=utf-8"}
 {"url": "https://example.org/gallery/album-1/", "kind": "page", "depth": 1, "status": 200, "content_type": "text/html; charset=utf-8"}
 {"url": "https://example.org/gallery/album-1/photo-1.jpg", "kind": "media", "depth": 2, "status": 200, "content_type": "image/jpeg", "media_role": "original", "data": "ffd8ffe000104a46494600010100000100010000ffc0000b080001000101011100ffda0008010100003f0000ffd9"}
-{"url": "https://example.org/gallery/album-1/photo-2.jpg", "kind": "media", "depth": 2, "status": 200, "content_type": "image/png", "media_role": "original", "data": "89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000049454e44ae426082"}
+{"url": "https://example.org/gallery/album-1/photo-2.jpg", "kind": "media", "depth": 2, "status": 200, "content_type": "image/png", "media_role": "original", "data": "89504e470d0a1a0a0000000d494844520000000200000002080600000072b60d240000000049454e44ae426082"}
