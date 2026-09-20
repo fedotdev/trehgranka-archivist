@@ -101,29 +101,21 @@ class ForumPipeline(Pipeline):
             "rss": urllib.parse.urljoin(self.config["TARGET_URL"], "rss"),
             "sitemap": urllib.parse.urljoin(self.config["TARGET_URL"], "sitemap.xml"),
         }
-        risks = list(base.get("risk_map", {}).keys())
+        risks = list(base.get("risks", []))
         if self.config.get("RESPECT_ROBOTS_TXT", True) is False:
             risks.append("RESPECT_ROBOTS_TXT=false — only continue with documented owner permission")
         base["risks"] = risks
         return base
 
     def _stage_discovery(self) -> dict:
-        discovered = self._manifest_items() or self._crawl() or []
-        source = "manifest" if self.config.get("DISCOVERY_MANIFEST") else "crawl"
-        self.pages = [d for d in discovered if d.get("kind") == "page"]
-        self.media = [d for d in discovered if d.get("kind") in ("media", "document")]
-        self.forum_entities = [d for d in discovered
+        base = super()._stage_discovery()
+        items = base.get("items", [])
+        self.forum_entities = [d for d in items
                                if d.get("kind") in ("forum", "topic", "post", "author")]
         self.entity_tally = self._entity_tally(self.forum_entities)
-        return {
-            "source": source,
-            "items": discovered,
-            "url_count": len(discovered),
-            "page_count": len(self.pages),
-            "media_count": len(self.media),
-            "forum_entity_count": len(self.forum_entities),
-            "entity_tally": self.entity_tally,
-        }
+        base["forum_entity_count"] = len(self.forum_entities)
+        base["entity_tally"] = self.entity_tally
+        return base
 
     def _entity_tally(self, entities: list[dict]) -> dict:
         tally = Counter()
@@ -197,8 +189,10 @@ class ForumPipeline(Pipeline):
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="forum-media archivist pipeline")
-    parser.add_argument("--config", required=True,
+    parser.add_argument("--config", required=True, dest="config",
                         help="project YAML/JSON path OR a directory containing config.yaml + discovered_urls.jsonl")
+    parser.add_argument("--input", dest="config",
+                        help="alias for --config (eval runner compatibility)")
     parser.add_argument("--output", default="test_report.json",
                         help="write the canonical test report to this exact file path")
     parser.add_argument("--run-full", action="store_true",

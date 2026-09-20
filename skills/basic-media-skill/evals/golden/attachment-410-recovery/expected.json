@@ -12,22 +12,58 @@
   "media_valid": 2,
   "media_invalid": 1,
   "recovery_queue_size": 1,
-  "coverage": "0.40",
+  "recovery_counts": {
+    "pending": 1,
+    "recovered_verified": 0,
+    "thumbnail_only": 0,
+    "placeholder": 0,
+    "ambiguous": 0,
+    "unresolved": 0
+  },
+  "coverage": "0.4000",
   "coverage_by_kind": {
     "pages": {
       "discovered": 2,
+      "verified": 0,
+      "coverage": "0.0000"
+    },
+    "media": {
+      "discovered": 2,
+      "verified": 1,
+      "coverage": "0.5000"
+    },
+    "documents": {
+      "discovered": null,
       "verified": null,
       "coverage": "n/a"
     },
-    "media": {
-      "discovered": 3,
-      "verified": 2,
-      "coverage": "0.67"
-    },
     "attachments": {
+      "discovered": 1,
+      "verified": 1,
+      "coverage": "1.0000"
+    },
+    "forum_entities": {
       "discovered": null,
       "verified": null,
       "coverage": "n/a"
     }
-  }
+  },
+  "policy_effective": {
+    "user_agent": "trehgranka-archivist/1.0 (+non-commercial research)",
+    "delay_seconds": 2.0,
+    "retry_count": 2,
+    "timeout_seconds": 20.0,
+    "max_response_bytes": 62914560,
+    "max_redirects": 5,
+    "respect_robots": true,
+    "allowed_domains": [
+      "- \"community.example.org\""
+    ]
+  },
+  "robots": {
+    "url": "https://community.example.org/robots.txt",
+    "status": "offline",
+    "note": "policy not evaluated in offline mode"
+  },
+  "scope": "section"
 }

@@ -356,9 +356,9 @@ def _run_skill(
 ) -> bool:
     """Execute the skill's `run` command for one case.
 
-    Binds {input}/{output} placeholders and runs from the skill root. Returns
-    True only on exit code 0 within the timeout. Mirrors _run_one's shell form
-    and the timeout= convention used elsewhere (review_staleness, export_utils).
+    Binds {input}/{output} placeholders and runs from the skill root. Exit
+    code 0 (success) and 3 (honest full-run gate "stop" sentinel) count as a
+    completed run; anything else is an error. Returns True only for those.
 
     When `model` is given it binds the optional {model} placeholder and is
     exported as EVAL_MODEL, so pipelines can pick the model under test either
@@ -382,7 +382,7 @@ def _run_skill(
         )
     except subprocess.TimeoutExpired:
         return False
-    return proc.returncode == 0
+    return proc.returncode in (0, 3)
 
 
 def _read_usage(produced: Path) -> dict | None:

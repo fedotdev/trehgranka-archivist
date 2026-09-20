@@ -382,7 +382,7 @@ def _run_skill(
         )
     except subprocess.TimeoutExpired:
         return False
-    return proc.returncode == 0
+    return proc.returncode in (0, 3)
 
 
 def _read_usage(produced: Path) -> dict | None:

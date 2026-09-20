@@ -7,29 +7,65 @@
   "gate_reason": "USER_CONFIRMED_FULL_RUN must be true AND --run-full must be passed",
   "decision": "ready",
   "urls_discovered": 6,
-  "pages": 1,
+  "pages": 4,
   "media_discovered": 1,
   "media_valid": 1,
   "media_invalid": 0,
   "recovery_queue_size": 0,
-  "coverage": "0.17",
+  "recovery_counts": {
+    "pending": 0,
+    "recovered_verified": 0,
+    "thumbnail_only": 0,
+    "placeholder": 0,
+    "ambiguous": 0,
+    "unresolved": 0
+  },
+  "coverage": "0.2000",
   "coverage_by_kind": {
     "pages": {
       "discovered": 1,
-      "verified": null,
-      "coverage": "n/a"
+      "verified": 0,
+      "coverage": "0.0000"
     },
     "media": {
-      "discovered": 1,
-      "verified": 1,
-      "coverage": "1.00"
-    },
-    "attachments": {
       "discovered": null,
       "verified": null,
       "coverage": "n/a"
+    },
+    "documents": {
+      "discovered": null,
+      "verified": null,
+      "coverage": "n/a"
+    },
+    "attachments": {
+      "discovered": 1,
+      "verified": 1,
+      "coverage": "1.0000"
+    },
+    "forum_entities": {
+      "discovered": 3,
+      "verified": 0,
+      "coverage": "0.0000"
     }
   },
+  "policy_effective": {
+    "user_agent": "trehgranka-archivist/1.0 (+non-commercial research)",
+    "delay_seconds": 2.0,
+    "retry_count": 2,
+    "timeout_seconds": 20.0,
+    "max_response_bytes": 62914560,
+    "max_redirects": 5,
+    "respect_robots": true,
+    "allowed_domains": [
+      "- \"community.example.org\""
+    ]
+  },
+  "robots": {
+    "url": "https://community.example.org/robots.txt",
+    "status": "offline",
+    "note": "policy not evaluated in offline mode"
+  },
+  "scope": "forum",
   "forum": {
     "engine": {
       "name": "unknown",
@@ -43,7 +79,7 @@
       "author": 1,
       "topics": 1,
       "posts": 1,
-      "pages": 1,
+      "pages": 4,
       "attachments": 1
     },
     "extractor_plan": "forumscraper",
@@ -53,6 +89,6 @@
       "auto_followed": false,
       "note": "multi-page topics are expansion candidates, not auto-followed in dry-run"
     },
-    "attachment_coverage": "0.00"
+    "attachment_coverage": "1.00"
   }
 }

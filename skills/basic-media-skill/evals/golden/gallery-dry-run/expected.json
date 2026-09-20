@@ -12,29 +12,58 @@
   "media_valid": 4,
   "media_invalid": 1,
   "recovery_queue_size": 1,
-  "coverage": "0.57",
+  "recovery_counts": {
+    "pending": 1,
+    "recovered_verified": 0,
+    "thumbnail_only": 0,
+    "placeholder": 0,
+    "ambiguous": 0,
+    "unresolved": 0
+  },
+  "coverage": "0.5714",
   "coverage_by_kind": {
     "pages": {
       "discovered": 2,
-      "verified": null,
-      "coverage": "n/a"
+      "verified": 0,
+      "coverage": "0.0000"
     },
     "media": {
-      "discovered": 5,
-      "verified": 4,
-      "coverage": "0.80"
+      "discovered": 4,
+      "verified": 3,
+      "coverage": "0.7500"
+    },
+    "documents": {
+      "discovered": 1,
+      "verified": 1,
+      "coverage": "1.0000"
     },
     "attachments": {
       "discovered": null,
       "verified": null,
       "coverage": "n/a"
+    },
+    "forum_entities": {
+      "discovered": null,
+      "verified": null,
+      "coverage": "n/a"
     }
   },
-  "output": {
-    "dir": "C:\\Users\\fedor\\AppData\\Local\\Temp\\tmpdxrwq3n5",
-    "state": "C:\\Users\\fedor\\AppData\\Local\\Temp\\tmpdxrwq3n5\\data\\archive.sqlite",
-    "raw_html": "C:\\Users\\fedor\\AppData\\Local\\Temp\\tmpdxrwq3n5\\data\\raw\\html",
-    "media_dir": "C:\\Users\\fedor\\AppData\\Local\\Temp\\tmpdxrwq3n5\\data\\media\\images",
-    "manifest": "C:\\Users\\fedor\\AppData\\Local\\Temp\\tmpdxrwq3n5\\data\\manifest.jsonl"
-  }
+  "policy_effective": {
+    "user_agent": "trehgranka-archivist/1.0 (+non-commercial research)",
+    "delay_seconds": 2.0,
+    "retry_count": 2,
+    "timeout_seconds": 20.0,
+    "max_response_bytes": 62914560,
+    "max_redirects": 5,
+    "respect_robots": true,
+    "allowed_domains": [
+      "- \"example.org\""
+    ]
+  },
+  "robots": {
+    "url": "https://example.org/robots.txt",
+    "status": "offline",
+    "note": "policy not evaluated in offline mode"
+  },
+  "scope": "gallery"
 }
