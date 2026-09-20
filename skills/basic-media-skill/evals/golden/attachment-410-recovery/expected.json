@@ -1,0 +1,33 @@
+{
+  "stage": "test_report",
+  "dry_run": true,
+  "confirmed": false,
+  "run_full_flag": false,
+  "gate": "stop",
+  "gate_reason": "USER_CONFIRMED_FULL_RUN must be true AND --run-full must be passed",
+  "decision": "needs changes",
+  "urls_discovered": 5,
+  "pages": 2,
+  "media_discovered": 3,
+  "media_valid": 2,
+  "media_invalid": 1,
+  "recovery_queue_size": 1,
+  "coverage": "0.40",
+  "coverage_by_kind": {
+    "pages": {
+      "discovered": 2,
+      "verified": null,
+      "coverage": "n/a"
+    },
+    "media": {
+      "discovered": 3,
+      "verified": 2,
+      "coverage": "0.67"
+    },
+    "attachments": {
+      "discovered": null,
+      "verified": null,
+      "coverage": "n/a"
+    }
+  }
+}

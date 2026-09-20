@@ -1,0 +1,64 @@
+{
+  "stage": "test_report",
+  "dry_run": true,
+  "confirmed": false,
+  "run_full_flag": false,
+  "gate": "stop",
+  "gate_reason": "USER_CONFIRMED_FULL_RUN must be true AND --run-full must be passed",
+  "decision": "ready",
+  "urls_discovered": 7,
+  "pages": 1,
+  "media_discovered": 2,
+  "media_valid": 2,
+  "media_invalid": 0,
+  "recovery_queue_size": 0,
+  "coverage": "0.29",
+  "coverage_by_kind": {
+    "pages": {
+      "discovered": 1,
+      "verified": null,
+      "coverage": "n/a"
+    },
+    "media": {
+      "discovered": 2,
+      "verified": 2,
+      "coverage": "1.00"
+    },
+    "attachments": {
+      "discovered": null,
+      "verified": null,
+      "coverage": "n/a"
+    }
+  },
+  "output": {
+    "dir": "C:\\Users\\fedor\\AppData\\Local\\Temp\\tmpkbrs85cz",
+    "state": "C:\\Users\\fedor\\AppData\\Local\\Temp\\tmpkbrs85cz\\data\\archive.sqlite",
+    "raw_html": "C:\\Users\\fedor\\AppData\\Local\\Temp\\tmpkbrs85cz\\data\\raw\\html",
+    "media_dir": "C:\\Users\\fedor\\AppData\\Local\\Temp\\tmpkbrs85cz\\data\\media\\images",
+    "manifest": "C:\\Users\\fedor\\AppData\\Local\\Temp\\tmpkbrs85cz\\data\\manifest.jsonl"
+  },
+  "forum": {
+    "engine": {
+      "name": "unknown",
+      "confidence": "low",
+      "evidence": "URL pattern probe inconclusive"
+    },
+    "entity_counts": {
+      "forum": 1,
+      "topic": 1,
+      "post": 2,
+      "topics": 1,
+      "posts": 2,
+      "pages": 1,
+      "attachments": 1
+    },
+    "extractor_plan": "scrapy-adapter",
+    "paginated_posts_seen": 1,
+    "pagination": {
+      "multi_page_topics_seen": 1,
+      "auto_followed": false,
+      "note": "multi-page topics are expansion candidates, not auto-followed in dry-run"
+    },
+    "attachment_coverage": "0.00"
+  }
+}

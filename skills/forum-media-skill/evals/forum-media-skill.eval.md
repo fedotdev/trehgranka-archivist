@@ -20,24 +20,24 @@ the bundled `scripts/run_evals.py` — edit the block, never the sidecars.
       "id": "forum-dry-run",
       "input": "golden/forum-dry-run/",
       "split": "val",
-      "expected": null,
-      "expected_status": "pending-first-green",
+      "expected": "golden/forum-dry-run/expected.json",
+      "expected_status": "promoted",
       "compare_ignore": ["generated_at", "output"]
     },
     {
       "id": "forum-fullrun-blocked",
       "input": "golden/forum-fullrun-blocked/",
       "split": "val",
-      "expected": null,
-      "expected_status": "pending-first-green",
+      "expected": "golden/forum-fullrun-blocked/expected.json",
+      "expected_status": "promoted",
       "compare_ignore": ["generated_at", "output"]
     },
     {
       "id": "forum-extract-holdout",
       "input": "golden/forum-extract-holdout/",
       "split": "test",
-      "expected": null,
-      "expected_status": "pending-first-green",
+      "expected": "golden/forum-extract-holdout/expected.json",
+      "expected_status": "promoted",
       "compare_ignore": ["generated_at", "output"]
     }
   ]

@@ -13,11 +13,28 @@
   "media_invalid": 1,
   "recovery_queue_size": 1,
   "coverage": "0.57",
+  "coverage_by_kind": {
+    "pages": {
+      "discovered": 2,
+      "verified": null,
+      "coverage": "n/a"
+    },
+    "media": {
+      "discovered": 5,
+      "verified": 4,
+      "coverage": "0.80"
+    },
+    "attachments": {
+      "discovered": null,
+      "verified": null,
+      "coverage": "n/a"
+    }
+  },
   "output": {
-    "dir": "<TEMP_WORKSPACE>",
-    "state": "<TEMP_WORKSPACE>\\data\\archive.sqlite",
-    "raw_html": "<TEMP_WORKSPACE>\\data\\raw\\html",
-    "media_dir": "<TEMP_WORKSPACE>\\data\\media\\images",
-    "manifest": "<TEMP_WORKSPACE>\\data\\manifest.jsonl"
+    "dir": "C:\\Users\\fedor\\AppData\\Local\\Temp\\tmpdxrwq3n5",
+    "state": "C:\\Users\\fedor\\AppData\\Local\\Temp\\tmpdxrwq3n5\\data\\archive.sqlite",
+    "raw_html": "C:\\Users\\fedor\\AppData\\Local\\Temp\\tmpdxrwq3n5\\data\\raw\\html",
+    "media_dir": "C:\\Users\\fedor\\AppData\\Local\\Temp\\tmpdxrwq3n5\\data\\media\\images",
+    "manifest": "C:\\Users\\fedor\\AppData\\Local\\Temp\\tmpdxrwq3n5\\data\\manifest.jsonl"
   }
 }

@@ -1,0 +1,58 @@
+{
+  "stage": "test_report",
+  "dry_run": true,
+  "confirmed": false,
+  "run_full_flag": false,
+  "gate": "stop",
+  "gate_reason": "USER_CONFIRMED_FULL_RUN must be true AND --run-full must be passed",
+  "decision": "ready",
+  "urls_discovered": 6,
+  "pages": 1,
+  "media_discovered": 1,
+  "media_valid": 1,
+  "media_invalid": 0,
+  "recovery_queue_size": 0,
+  "coverage": "0.17",
+  "coverage_by_kind": {
+    "pages": {
+      "discovered": 1,
+      "verified": null,
+      "coverage": "n/a"
+    },
+    "media": {
+      "discovered": 1,
+      "verified": 1,
+      "coverage": "1.00"
+    },
+    "attachments": {
+      "discovered": null,
+      "verified": null,
+      "coverage": "n/a"
+    }
+  },
+  "forum": {
+    "engine": {
+      "name": "unknown",
+      "confidence": "low",
+      "evidence": "URL pattern probe inconclusive"
+    },
+    "entity_counts": {
+      "forum": 1,
+      "topic": 1,
+      "post": 1,
+      "author": 1,
+      "topics": 1,
+      "posts": 1,
+      "pages": 1,
+      "attachments": 1
+    },
+    "extractor_plan": "forumscraper",
+    "paginated_posts_seen": 1,
+    "pagination": {
+      "multi_page_topics_seen": 1,
+      "auto_followed": false,
+      "note": "multi-page topics are expansion candidates, not auto-followed in dry-run"
+    },
+    "attachment_coverage": "0.00"
+  }
+}
