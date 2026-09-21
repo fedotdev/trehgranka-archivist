@@ -85,13 +85,15 @@ class ConfigError(ValueError):
 # --------------------------------------------------------------------------
 
 def normalize_url(url: str) -> str | None:
-    """Validate a URL and return it without the fragment; None if unusable."""
+    """Validate a URL and quote unsafe path/query characters for urllib."""
     parsed = urllib.parse.urlparse(url.strip())
     if parsed.scheme not in URL_SCHEMES or not parsed.netloc:
         return None
     if parsed.username or parsed.password:
         return None
-    return urllib.parse.urlunparse(parsed._replace(fragment=""))
+    path = urllib.parse.quote(parsed.path, safe="/%:@-._~!$&'()*+,;=%")
+    query = urllib.parse.quote(parsed.query, safe="/%:@-._~!$&'()*+,;=?%")
+    return urllib.parse.urlunparse(parsed._replace(path=path, query=query, fragment=""))
 
 
 def canonical_url(url: str) -> str | None:
@@ -876,6 +878,8 @@ def _parse_simple_yaml(text: str) -> dict:
 # --------------------------------------------------------------------------
 
 def probe_self_check() -> str:
+    quoted = normalize_url("https://example.org/f/200_Yuri Popov-2008-2.gif")
+    assert quoted == "https://example.org/f/200_Yuri%20Popov-2008-2.gif"
     jpeg_ok = validate_media(status=200, content_type="image/jpeg", body=_build_jpeg())
     assert jpeg_ok["ok"], f"jpeg self-check failed: {jpeg_ok['reasons']}"
     good_png = _build_png((2, 2))
