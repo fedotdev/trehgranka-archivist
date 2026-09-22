@@ -31,6 +31,7 @@ Stdlib only. No third-party imports.
 from __future__ import annotations
 
 import hashlib
+import http.client
 import ipaddress
 import json
 import os
@@ -60,6 +61,11 @@ MAGIC_BYTES: dict[str, tuple[bytes, int]] = {
     "image/x-icon": (b"\x00\x00\x01\x00", 4),
     "application/pdf": (b"%PDF-", 5),
     "application/zip": (b"PK", 2),
+}
+
+AUDIO_MIMES = {
+    "audio/mpeg", "audio/mp3", "audio/wav", "audio/x-wav", "audio/wave",
+    "audio/ogg", "audio/flac", "audio/mp4", "audio/aac", "audio/webm",
 }
 
 DECODABLE = {"image/jpeg", "image/png", "image/gif", "image/webp"}
@@ -318,9 +324,30 @@ def detect_mime(body: bytes) -> str | None:
         return "application/zip"
     if body.startswith(b"\x00\x00\x01\x00"):
         return "image/x-icon"
+    if body.startswith(b"RIFF") and body[8:12] == b"WAVE":
+        return "audio/wav"
+    if body.startswith(b"OggS"):
+        return "audio/ogg"
+    if body.startswith(b"fLaC"):
+        return "audio/flac"
+    # M4A/M4B/M4P only; generic ftyp also covers video MP4.
+    if len(body) >= 12 and body[4:8] == b"ftyp" and body[8:12] in (b"M4A ", b"M4B ", b"M4P "):
+        return "audio/mp4"
+    if body.startswith(b"ID3") or _looks_like_mp3_frame(body):
+        return "audio/mpeg"
+    if _looks_like_adts(body):
+        return "audio/aac"
     if re.match(rb"^\s*<(?:!doctype\s+)?html", body[:512], re.IGNORECASE):
         return "text/html"
     return None
+
+
+def _looks_like_mp3_frame(body: bytes) -> bool:
+    return len(body) >= 2 and body[0] == 0xFF and body[1] & 0xE0 == 0xE0
+
+
+def _looks_like_adts(body: bytes) -> bool:
+    return len(body) >= 2 and body[0] == 0xFF and body[1] & 0xF6 == 0xF0
 
 
 def classify_content(declared: str, body: bytes) -> tuple[str, str]:
@@ -333,7 +360,7 @@ def classify_content(declared: str, body: bytes) -> tuple[str, str]:
     declared_norm = (declared or "").split(";")[0].strip().lower()
     if detected in PAGE_MIMES or detected == "text/html":
         return "html", detected or "text/html"
-    if detected in DECODABLE or detected in ("image/x-icon",):
+    if detected in DECODABLE or detected in ("image/x-icon",) or detected in AUDIO_MIMES:
         return "media", detected
     if detected in ("application/pdf", "application/zip"):
         return "document", detected
@@ -343,6 +370,8 @@ def classify_content(declared: str, body: bytes) -> tuple[str, str]:
     if declared_norm.startswith("text/html") or declared_norm in PAGE_MIMES:
         return "html", "text/html"
     if declared_norm.startswith("image/"):
+        return "media", declared_norm
+    if declared_norm in AUDIO_MIMES:
         return "media", declared_norm
     if declared_norm in ("application/pdf", "application/zip"):
         return "document", declared_norm
@@ -356,6 +385,8 @@ def _mime_matches(declared: str, detected: str) -> bool:
     declared_norm = (declared or "").split(";")[0].strip().lower()
     if not declared_norm or declared_norm == "application/octet-stream":
         return True  # generic containers defer to magic
+    if declared_norm in AUDIO_MIMES and detected in AUDIO_MIMES:
+        return True
     return declared_norm == detected
 
 
@@ -536,6 +567,29 @@ def _validate_zip(body: bytes, reasons: list[str]) -> bool:
     return True
 
 
+def _validate_audio(body: bytes, reasons: list[str], detected: str) -> bool:
+    """Validate container/frame signature only; stdlib has no audio decoder.
+
+    ponytail: no duration/codec parsing; add a container parser when metadata
+    or transcoding becomes a requirement.
+    """
+    ok = {
+        "audio/wav": body.startswith(b"RIFF") and len(body) >= 12 and body[8:12] == b"WAVE",
+        "audio/ogg": body.startswith(b"OggS") and len(body) >= 27,
+        "audio/flac": body.startswith(b"fLaC") and len(body) >= 8,
+        "audio/mp4": len(body) >= 12 and body[4:8] == b"ftyp",
+        "audio/mpeg": body.startswith(b"ID3") or _looks_like_mp3_frame(body),
+        "audio/aac": _looks_like_adts(body),
+        "audio/webm": body.startswith(b"\x1a\x45\xdf\xa3"),
+    }.get(detected, False)
+    if ok:
+        reasons.clear()
+        reasons.append(f"signature_verified {detected}")
+    else:
+        reasons.append(f"invalid audio signature {detected}")
+    return ok
+
+
 # format -> structural validator (stdlib-only, no third-party decode)
 MEDIA_VALIDATORS: dict[str, callable] = {
     "image/jpeg": _validate_jpeg,
@@ -543,6 +597,9 @@ MEDIA_VALIDATORS: dict[str, callable] = {
     "image/gif": _validate_gif,
     "image/webp": _validate_webp,
 }
+
+AUDIO_VALIDATORS = {mime: (lambda body, reasons, _mime=mime: _validate_audio(body, reasons, _mime))
+                    for mime in AUDIO_MIMES}
 
 
 def is_placeholder_body(body: bytes) -> bool:
@@ -575,7 +632,7 @@ def validate_media(*, status, content_type, body, role: str = "unknown") -> dict
     elif not body:
         reasons.append("empty body")
         state = "invalid"
-    elif is_placeholder_body(body):
+    elif is_placeholder_body(body) and detect_mime(body) not in AUDIO_MIMES:
         reasons.append("placeholder stub body")
         state = "invalid"
     else:
@@ -587,6 +644,8 @@ def validate_media(*, status, content_type, body, role: str = "unknown") -> dict
             validator = MEDIA_VALIDATORS.get(detected)
             if detected == "image/x-icon":
                 ok = len(body) >= 6
+            elif detected in AUDIO_MIMES:
+                ok = AUDIO_VALIDATORS[detected](body, reasons)
             elif validator is None:
                 reasons.append(f"unhandled image type {detected}")
                 ok = False
@@ -730,6 +789,11 @@ def fetch(url: str, *, policy: RequestPolicy | None = None,
                 continue
             error = f"http {status}"
             break
+        except (http.client.InvalidURL, UnicodeEncodeError) as exc:
+            # One malformed URL (raw space, non-ASCII host) must fail that item,
+            # not the whole crawl: no retry will fix a broken URL.
+            error = f"{type(exc).__name__}: {exc}"
+            break
         except (urllib.error.URLError, OSError, ValueError) as exc:
             last_error = exc
             if attempt < policy.retry_count:
@@ -810,6 +874,36 @@ def validate_config(cfg: dict, offline: bool = False) -> None:
         if val is not None and not isinstance(val, bool):
             raise ConfigError(f"{key} must be true/false")
 
+    source_mode = cfg.get("SOURCE_MODE")
+    if source_mode is not None and source_mode not in ("live", "wayback_primary"):
+        raise ConfigError(f"SOURCE_MODE must be 'live' or 'wayback_primary', got {source_mode!r}")
+
+    for block_key in ("WAYBACK_PRIMARY", "wayback_primary"):
+        wb = cfg.get(block_key)
+        if wb is None:
+            continue
+        if not isinstance(wb, dict):
+            raise ConfigError(f"{block_key} must be a mapping (see project-config.example.yaml)")
+        for key, typ in (
+            ("SEED_URL", str), ("seed_url", str),
+            ("TARGET_TIMESTAMP", str), ("target_timestamp", str),
+            ("ORIGINAL_URL", str), ("original_url", str),
+            ("ALLOW_LIVE_FALLBACK", bool), ("allow_live_fallback", bool),
+            ("PREFER_EXACT_TIMESTAMP", bool), ("prefer_exact_timestamp", bool),
+            ("COLLAPSE_DIGEST", bool), ("collapse_digest", bool),
+            ("USE_REPLAY_FOR_DISCOVERY", bool), ("use_replay_for_discovery", bool),
+            ("USE_ID_RAW_FOR_STORAGE", bool), ("use_id_raw_for_storage", bool),
+            ("STORE_RAW_HTML", bool), ("store_raw_html", bool),
+            ("EMIT_PROVENANCE_JSONL", bool), ("emit_provenance_jsonl", bool),
+            ("TIMESTAMP_TOLERANCE_DAYS", (int, float)), ("timestamp_tolerance_days", (int, float)),
+            ("MAX_CDX_PAGES", int), ("max_cdx_pages", int),
+            ("MAX_CDX_RESULTS_PER_URL", int), ("max_cdx_results_per_url", int),
+            ("MAX_CANDIDATES", int), ("max_candidates", int),
+        ):
+            if key in wb and not isinstance(wb[key], typ):
+                raise ConfigError(
+                    f"{block_key}.{key} must be {getattr(typ, '__name__', typ)}, got {wb[key]!r}")
+
     confirm = cfg.get("USER_CONFIRMED_FULL_RUN", False)
     if not isinstance(confirm, bool):
         raise ConfigError("USER_CONFIRMED_FULL_RUN must be true/false")
@@ -846,30 +940,72 @@ def _scalar(token: str):
     return token
 
 
+def _unquote(token: str) -> str:
+    token = token.strip()
+    if len(token) >= 2 and token[0] == token[-1] and token[0] in ('"', "'"):
+        return token[1:-1]
+    return token
+
+
+def _list_item(token: str) -> str:
+    """Strip a YAML list dash (and surrounding quotes): '- metro.ru' -> 'metro.ru',
+    '- \"200\"' -> '200' (same unquoting rule as scalar values)."""
+    item = token[2:].strip() if token.startswith("- ") else token.strip()
+    return _unquote(item) if item else item
+
+
 def _parse_simple_yaml(text: str) -> dict:
+    """Parse the skill's flat YAML subset: top-level scalars, indented list
+    items (`- value`) and one-level blocks (`key:` + indented `sub: value`),
+    e.g. the `wayback_primary:` section. Deeper nesting raises ConfigError.
+    """
     cfg: dict = {}
-    in_list: str | None = None
+    active: str | None = None            # pending key collecting indented children
+    active_is_list: bool | None = None   # True: `- item` lines; False: `k: v` block
     for raw in text.splitlines():
         line = raw.rstrip()
-        if not line.strip() or line.lstrip().startswith("#"):
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
             continue
         indent = len(line) - len(line.lstrip())
-        if indent > 0 and in_list is not None:
-            cfg.setdefault(in_list, []).append(_scalar(line.strip()))
+        if indent > 0 and active is not None:
+            if stripped.startswith("- ") and ":" not in stripped.replace("- ", "", 1):
+                if active_is_list is False:
+                    raise ConfigError(f"mixed list/block under config key {active!r}")
+                active_is_list = True
+                cfg[active] = [*cfg.get(active, []), _scalar(_list_item(stripped))]
+            elif ":" in stripped:
+                if active_is_list is True:
+                    raise ConfigError(f"mixed list/block under config key {active!r}")
+                active_is_list = False
+                k, _, v = stripped.partition(":")
+                k, v = k.strip(), v.strip()
+                if not v:
+                    raise ConfigError(
+                        f"nested list under config key {active!r} not supported (key {k!r})")
+                nested = cfg.get(active)
+                if not isinstance(nested, dict):
+                    nested = {}
+                    cfg[active] = nested
+                nested[k] = _scalar(_unquote(v))
+            elif stripped.startswith("-"):
+                raise ConfigError(f"unparsable config list item: {line!r}")
+            else:
+                raise ConfigError(f"unparsable config line: {line!r}")
             continue
-        if ":" not in line:
+        if indent > 0:
+            raise ConfigError(f"indented config line outside a block: {line!r}")
+        if ":" not in stripped:
             raise ConfigError(f"unparsable config line: {line!r}")
-        key, _, value = line.partition(":")
+        key, _, value = stripped.partition(":")
         key = key.strip()
         value = value.strip()
-        if value == "":
-            in_list = key
-            cfg.setdefault(key, [])
-            continue
-        if value.startswith('"') and value.endswith('"'):
-            value = value[1:-1]
-        cfg[key] = _scalar(value)
-        in_list = None
+        if value:
+            cfg[key] = _scalar(_unquote(value))
+            active = None
+        else:
+            active = key
+            active_is_list = None
     return cfg
 
 
@@ -897,6 +1033,19 @@ def probe_self_check() -> str:
     assert not octet["ok"], "arbitrary octet-stream must be rejected"
     html_stub = validate_media(status=200, content_type="image/jpeg", body=b"<html><body>not an image</body></html>")
     assert not html_stub["ok"], "html placeholder must be rejected"
+    wav_stub = b"RIFF" + (36).to_bytes(4, "little") + b"WAVEfmt "
+    wav_result = validate_media(status=200, content_type="audio/wav", body=wav_stub)
+    assert wav_result["ok"], wav_result
+    yaml_parsed = _parse_simple_yaml(
+        "TARGET_URL: https://example.org/\n"
+        "ALLOWED_DOMAINS:\n  - metro.ru\n  - www.metro.ru\n"
+        "wayback_primary:\n"
+        "  seed_url: \"https://web.archive.org/web/20040804234004/http://x/\"\n"
+        "  allow_live_fallback: false\n"
+    )
+    assert yaml_parsed["ALLOWED_DOMAINS"] == ["metro.ru", "www.metro.ru"], yaml_parsed
+    assert yaml_parsed["wayback_primary"]["allow_live_fallback"] is False, yaml_parsed
+    assert yaml_parsed["wayback_primary"]["seed_url"].startswith("https://web.archive.org"), yaml_parsed
     return "archivist_core self-check ok"
 
 

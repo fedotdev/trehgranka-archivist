@@ -27,3 +27,7 @@ runs/
 *.key
 *.pem
 credentials*
+.work/
+
+# Chat analysis notes (local transcripts of external chats, may contain sensitive excerpts)
+instructions/chat-analysis-*.md

@@ -1,0 +1,68 @@
+# Trehgranka Archivist — WAYBACK_PRIMARY_SITE_MODE example config
+#
+# Use this mode when the project input is a Wayback Machine replay URL
+# (or the target site exists only in web.archive.org). The Internet Archive
+# becomes the primary (and by default the only) source of truth: the pipeline
+# discovers pages from ARCHIVED html, selects each artefact's own capture by
+# timestamp proximity, stores raw artefacts via id_ (never replay html),
+# validates every response, writes a self-contained local copy under site/
+# and emits provenance per file.
+#
+# No live traffic to the original domain happens unless allow_live_fallback
+# is explicitly set to true.
+
+TARGET_URL: "https://web.archive.org/web/20040804234004/http://www.rzd.example/"
+SOURCE_MODE: "wayback_primary"
+USER_CONFIRMED_FULL_RUN: true
+REQUEST_DELAY_SECONDS: 0.7
+
+# list-valued keys live at the top level (the parser's one-level block format
+# supports scalars only); the wayback_primary block may use the flat spellings
+# instead — normalize_lookup checks both.
+FILTER_STATUSCODE:
+  - "200"
+ALLOWED_MIMETYPES:
+  - "text/html"
+  - "text/css"
+  - "application/javascript"
+  - "image/gif"
+  - "image/jpeg"
+  - "image/png"
+  - "image/webp"
+  - "application/pdf"
+  - "audio/mpeg"
+  - "audio/wav"
+  - "audio/ogg"
+  - "audio/flac"
+  - "audio/mp4"
+
+wayback_primary:
+  # Either set SEED_URL (full replay) ...
+  # SEED_URL: "https://web.archive.org/web/20040804234004/http://www.rzd.example/"
+  # ... or ORIGINAL_URL + TARGET_TIMESTAMP:
+  ORIGINAL_URL: "http://www.rzd.example/"
+  TARGET_TIMESTAMP: "20040804234004"
+
+  # historical moment semantics
+  PREFER_EXACT_TIMESTAMP: true
+  TIMESTAMP_TOLERANCE_DAYS: 30
+
+  # discovery + storage transport policy
+  USE_REPLAY_FOR_DISCOVERY: true
+  USE_ID_RAW_FOR_STORAGE: true
+
+  # safety: live fallback stays OFF unless the author explicitly enables it
+  ALLOW_LIVE_FALLBACK: false
+
+  # CDX handling
+  COLLAPSE_DIGEST: true
+  MAX_CDX_RESULTS_PER_URL: 500
+  MAX_CDX_PAGES: 10
+  MAX_CANDIDATES: 8
+
+  # crawl budget (pages of the archived site, not live)
+  MAX_PAGES: 2000
+  MAX_DEPTH: 12
+
+  STORE_RAW_HTML: true
+  EMIT_PROVENANCE_JSONL: true

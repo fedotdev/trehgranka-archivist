@@ -57,7 +57,7 @@
     "max_redirects": 5,
     "respect_robots": true,
     "allowed_domains": [
-      "- \"community.example.org\""
+      "community.example.org"
     ]
   },
   "robots": {

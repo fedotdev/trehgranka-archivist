@@ -635,6 +635,14 @@ def main() -> int:
                         help="request a full run (requires USER_CONFIRMED_FULL_RUN=true)")
     parser.add_argument("--offline", action="store_true",
                         help="no network calls; canned responses (eval-safe)")
+    parser.add_argument("--source-mode", choices=("live", "wayback_primary"))
+    parser.add_argument("--wayback-seed-url")
+    parser.add_argument("--wayback-target-timestamp")
+    parser.add_argument("--allow-live-fallback", action="store_true")
+    parser.add_argument("--timestamp-tolerance-days", type=float)
+    parser.add_argument("--prefer-exact-timestamp", action="store_true")
+    parser.add_argument("--store-raw-html", action="store_true")
+    parser.add_argument("--emit-provenance-jsonl", action="store_true")
     args = parser.parse_args()
 
     config_path = Path(args.config)
@@ -650,6 +658,43 @@ def main() -> int:
     except core.ConfigError as exc:
         print(f"CONFIG ERROR: {exc}", file=sys.stderr)
         return 2
+    wb = cfg.get("WAYBACK_PRIMARY") or cfg.get("wayback_primary") or {}
+    if not isinstance(wb, dict):
+        wb = {}
+    if args.source_mode:
+        cfg["SOURCE_MODE"] = args.source_mode
+    if args.wayback_seed_url:
+        wb["seed_url"] = args.wayback_seed_url
+    if args.wayback_target_timestamp:
+        wb["target_timestamp"] = args.wayback_target_timestamp
+    if args.allow_live_fallback:
+        wb["allow_live_fallback"] = True
+    if args.timestamp_tolerance_days is not None:
+        wb["timestamp_tolerance_days"] = args.timestamp_tolerance_days
+    if args.prefer_exact_timestamp:
+        wb["prefer_exact_timestamp"] = True
+    if args.store_raw_html:
+        wb["store_raw_html"] = True
+    if args.emit_provenance_jsonl:
+        wb["emit_provenance_jsonl"] = True
+    if wb:
+        cfg["wayback_primary"] = wb
+
+    target_hint = str(cfg.get("TARGET_URL", "")) + str(wb.get("seed_url", ""))
+    if "web.archive.org/web/" in target_hint.lower() and not args.source_mode:
+        cfg["SOURCE_MODE"] = "wayback_primary"
+
+    # Wayback-first mode: everything comes from the Internet Archive, so this
+    # pipeline's live crawling path would be the wrong tool entirely. Delegate.
+    mode = (cfg.get("SOURCE_MODE") or cfg.get("source_mode") or "").lower()
+    if mode == "wayback_primary":
+        from wayback_primary import run_from_cli as wayback_run  # lazy: circular import
+        cli = [f"--config={config_file}", f"--output={args.output}"]
+        if args.run_full:
+            cli.append("--run-full")
+        if args.offline:
+            cli.append("--offline")
+        return wayback_run(cli)
     if manifest_file.exists():
         cfg = {**cfg, "DISCOVERY_MANIFEST": str(manifest_file)}
     out = Path(args.output)
